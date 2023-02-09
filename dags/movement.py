@@ -61,9 +61,7 @@ def movement():
 
     loaded_dataframe >> filtered_dataframe
 
-
-
-    # aql.cleanup() # delete created temporary tables
+    aql.cleanup() # delete created temporary tables
 
 
 dag = movement()
