@@ -28,6 +28,7 @@ os.environ['AIRFLOW_CONN_DUCKDB_CONN'] = 'duckdb://%2Ftmp%2Fdb.duckdb'
 def load_h3_extension():
     """ Loads the H3 extension into the DuckDB database. 
     Note: This should be run from a SQL task once the astro decorator exposes ability to set `allow_unsigned_extensions`.
+    See: https://github.com/astronomer/airflow-provider-duckdb/issues/4
     """ 
     con = duckdb.connect(database="/tmp/db.duckdb", config={"allow_unsigned_extensions": "true"}, read_only=False)
     con.execute("LOAD 'h3-duckdb/build/release/h3.duckdb_extension';")
