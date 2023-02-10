@@ -1,0 +1,3 @@
+[submodule "h3-duckdb"]
+	path = h3-duckdb
+	url = https://github.com/isaacbrodsky/h3-duckdb.git
