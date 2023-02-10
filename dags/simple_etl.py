@@ -12,7 +12,7 @@ DUCKDB_CONN_ID = "duckdb_conn"
 AWS_CONN_ID = "aws_default"
 s3_bucket = os.getenv("S3_BUCKET", "s3://movement-sample/_output")
 
-os.environ['AIRFLOW_CONN_DUCKDB_CONN'] = 'duckdb://%2Ftmp%2Fdb.duckdb'
+os.environ["AIRFLOW_CONN_DUCKDB_CONN"] = "duckdb://%2Ftmp%2Fdb.duckdb"
 
 
 @aql.transform()
@@ -33,7 +33,9 @@ def transform_data(df: pd.DataFrame):
 )
 def simple_etl():
     veraset_data = aql.load_file(
-        input_file=File("s3://movement-sample/movement_dataset_metadata.csv", conn_id=AWS_CONN_ID),
+        input_file=File(
+            "s3://movement-sample/movement_dataset_metadata.csv", conn_id=AWS_CONN_ID
+        ),
         task_id="veraset_data",
         output_table=Table(conn_id=DUCKDB_CONN_ID),
     )
@@ -57,7 +59,7 @@ def simple_etl():
         if_exists="replace",
     )
 
-    aql.cleanup() # delete created temporary tables
+    aql.cleanup()  # delete created temporary tables
 
 
 dag = simple_etl()

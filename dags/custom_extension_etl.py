@@ -2,7 +2,7 @@ from datetime import datetime
 import os
 import sys
 
-# Resolves: `duckdb.IOException: IO Error: Extension "h3-duckdb/build/release/h3.duckdb_extension"could not be loaded: 
+# Resolves: `duckdb.IOException: IO Error: Extension "h3-duckdb/build/release/h3.duckdb_extension"could not be loaded:
 # h3-duckdb/build/release/h3.duckdb_extension: undefined symbol: _ZTIN6duckdb18BaseScalarFunctionE``
 # https://github.com/duckdb/duckdb/issues/3243#issuecomment-1080521541
 sys.setdlopenflags(os.RTLD_GLOBAL | os.RTLD_NOW)
@@ -21,16 +21,20 @@ AWS_CONN_ID = "aws_default"
 s3_bucket = os.getenv("S3_BUCKET", "s3://movement-sample/_output")
 
 # Sets the connection string for the DuckDB connection
-os.environ['AIRFLOW_CONN_DUCKDB_CONN'] = 'duckdb://%2Ftmp%2Fdb.duckdb'
+os.environ["AIRFLOW_CONN_DUCKDB_CONN"] = "duckdb://%2Ftmp%2Fdb.duckdb"
 
 
 @aql.dataframe(conn_id=DUCKDB_CONN_ID)
 def load_custom_extension_funct():
-    """ Loads the H3 extension into the DuckDB database. 
+    """Loads the H3 extension into the DuckDB database.
     Note: This should be run from a SQL task once the astro decorator exposes ability to set `allow_unsigned_extensions`.
     See: https://github.com/astronomer/airflow-provider-duckdb/issues/4
-    """ 
-    con = duckdb.connect(database="/tmp/db.duckdb", config={"allow_unsigned_extensions": "true"}, read_only=False)
+    """
+    con = duckdb.connect(
+        database="/tmp/db.duckdb",
+        config={"allow_unsigned_extensions": "true"},
+        read_only=False,
+    )
     con.execute("LOAD 'h3-duckdb/build/release/h3.duckdb_extension';")
 
     # Validate the extension was loaded
@@ -41,8 +45,7 @@ def load_custom_extension_funct():
 
 @aql.run_raw_sql(conn_id=DUCKDB_CONN_ID)
 def load_data():
-    """ Loads `httpfs` extension and reads partitioned parquet data from S3.
-    """
+    """Loads `httpfs` extension and reads partitioned parquet data from S3."""
     return """
         INSTALL httpfs;
         LOAD httpfs;
@@ -64,7 +67,7 @@ def filter_data():
 
 @aql.transform(conn_id=DUCKDB_CONN_ID)
 def failed_task_validate_custom_extension():
-    """ This task fails. 
+    """This task fails.
     Note: Needs `allow_unsigned_extensions` to be set to true before the DuckDB connection is created.
     """
     return """
@@ -75,16 +78,22 @@ def failed_task_validate_custom_extension():
 
 @aql.dataframe()
 def failed_task_transform_data(df: pd.DataFrame):
-    """ This task fails. 
+    """This task fails.
     Note: The DuckDB connection for the input (which has an empty config) has precedence, so the `allow_unsigned_extensions`
     config doesn't set and the custom library doesn't load.
-    """ 
+    """
     # Faux transformation
-    con = duckdb.connect(database="/tmp/db.duckdb", config={"allow_unsigned_extensions": "true"}, read_only=False)
+    con = duckdb.connect(
+        database="/tmp/db.duckdb",
+        config={"allow_unsigned_extensions": "true"},
+        read_only=False,
+    )
     con.execute("LOAD 'h3-duckdb/build/release/h3.duckdb_extension';")
 
     # Validate the extension was loaded
-    df_2 = con.execute("SELECT h3_cell_to_parent(cast(586265647244115967 as ubigint), 1);").df()
+    df_2 = con.execute(
+        "SELECT h3_cell_to_parent(cast(586265647244115967 as ubigint), 1);"
+    ).df()
     print(df_2)
     return df_2
 
@@ -95,7 +104,6 @@ def failed_task_transform_data(df: pd.DataFrame):
     catchup=False,
 )
 def custom_extension_etl():
-
     load_custom_extension = load_custom_extension_funct()
 
     validate_custom = failed_task_validate_custom_extension()
@@ -109,10 +117,9 @@ def custom_extension_etl():
         output_table=Table(conn_id=DUCKDB_CONN_ID),
     )
 
-    load_custom_extension >>  load_dataframe >> filter_dataframe >> transform_dataframe >> validate_custom
+    load_custom_extension >> load_dataframe >> filter_dataframe >> transform_dataframe >> validate_custom
 
-
-    aql.cleanup() # delete created temporary tables
+    aql.cleanup()  # delete created temporary tables
 
 
 dag = custom_extension_etl()
