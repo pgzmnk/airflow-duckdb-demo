@@ -28,4 +28,4 @@ sqlalchemy.exc.OperationalError: (duckdb.IOException) IO Error: Could not set lo
 
 ### Custom configuration
 
-The Astro SDK library will soon support setting global DuckDB config, which will resolve the issues mentioned in failed tasks of `custom_extension_etl.py`.
+The Astro SDK library will soon support setting global DuckDB config, which will resolve the issues around `allow_unsigned_extensions` mentioned in failed tasks of `custom_extension_etl.py`.
