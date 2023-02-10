@@ -1,11 +1,10 @@
 FROM quay.io/astronomer/astro-runtime:7.2.0
 
-# Install cmake
+# Install cmake, required by the extension
 USER root
 RUN apt-get update
 RUN wget http://cmake.org/files/v3.25/cmake-3.25.0.tar.gz
 RUN tar xf cmake-3.25.0.tar.gz
-# RUN (cd cmake-3.25.0/ && ./configure && make -- -DCMAKE_USE_OPENSSL=OFF)
 RUN (cd cmake-3.25.0 && ./bootstrap -- -DCMAKE_USE_OPENSSL=OFF && make && make install)
 
 # Install extension

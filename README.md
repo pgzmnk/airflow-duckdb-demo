@@ -6,8 +6,12 @@ The issues mentioned in `Caveats` below are tracked and should be resolved soon.
 
 ## Getting started
 
+Spin up Airflow with the following command.
+
+Note: Startup might take long the first time because the Dockerfile installs a custom library. This can be remediated by introducing custom images instead.
+
 ```
-airflow db init
+airflow dev start
 ```
 
 Visit [http://localhost:8080/](http://localhost:8080/) and log in with `admin`:`admin`.
