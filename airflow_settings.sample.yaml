@@ -1,0 +1,23 @@
+# `airflow_settings.yaml` allows you to configure Airflow Connections, Pools, and Variables in a single place for local development only.
+# This file shows a sample structure.
+# NOTE: json dicts can be added to the conn_extra field as yaml key value pairs. See the example below.
+
+# For more information, refer to our docs: https://docs.astronomer.io/develop-project#configure-airflow_settingsyaml-local-development-only
+# For questions, reach out to: https://support.astronomer.io
+# For issues create an issue ticket here: https://github.com/astronomer/astro-cli/issues
+
+airflow:
+  connections:
+    - conn_id: aws_default
+      conn_type: aws
+      conn_extra:
+        region: us-west-2
+        aws_access_key_id: <YOUR AWS_ACCESS_KEY_ID>
+        aws_secret_access_key: <YOUR AWS_SECRET_ACCESS_KEY>
+  pools:
+    - pool_name:
+      pool_slot:
+      pool_description:
+  variables:
+    - variable_name:
+      variable_value:
