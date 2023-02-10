@@ -20,7 +20,7 @@ DUCKDB_CONN_ID = "duckdb_conn"
 AWS_CONN_ID = "aws_default"
 s3_bucket = os.getenv("S3_BUCKET", "s3://movement-sample/_output")
 
-# Sets the connection string for the DuckDB connection
+# Sets the connection string for the DuckDB connection.
 os.environ["AIRFLOW_CONN_DUCKDB_CONN"] = "duckdb://%2Ftmp%2Fdb.duckdb"
 
 
@@ -37,7 +37,7 @@ def load_custom_extension_funct():
     )
     con.execute("LOAD 'h3-duckdb/build/release/h3.duckdb_extension';")
 
-    # Validate the extension was loaded
+    # Validate the extension was loaded.
     df = con.execute("SELECT h3_cell_to_parent(cast(586265647244115967 as ubigint), 1);").df()
     print(df)
     return df
@@ -82,7 +82,8 @@ def failed_task_transform_data(df: pd.DataFrame):
     Note: The DuckDB connection for the input (which has an empty config) has precedence, so the `allow_unsigned_extensions`
     config doesn't set and the custom library doesn't load.
     """
-    # Faux transformation
+
+    # This connection is unable to set `allow_unsigned_extensions` to true.
     con = duckdb.connect(
         database="/tmp/db.duckdb",
         config={"allow_unsigned_extensions": "true"},
@@ -90,7 +91,7 @@ def failed_task_transform_data(df: pd.DataFrame):
     )
     con.execute("LOAD 'h3-duckdb/build/release/h3.duckdb_extension';")
 
-    # Validate the extension was loaded
+    # Validate the extension was loaded.
     df_2 = con.execute(
         "SELECT h3_cell_to_parent(cast(586265647244115967 as ubigint), 1);"
     ).df()
