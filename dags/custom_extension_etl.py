@@ -25,22 +25,18 @@ os.environ['AIRFLOW_CONN_DUCKDB_CONN'] = 'duckdb://%2Ftmp%2Fdb.duckdb'
 
 
 @aql.dataframe(conn_id=DUCKDB_CONN_ID)
-def load_h3_extension():
+def load_custom_extension_funct():
     """ Loads the H3 extension into the DuckDB database. 
     Note: This should be run from a SQL task once the astro decorator exposes ability to set `allow_unsigned_extensions`.
     See: https://github.com/astronomer/airflow-provider-duckdb/issues/4
     """ 
     con = duckdb.connect(database="/tmp/db.duckdb", config={"allow_unsigned_extensions": "true"}, read_only=False)
     con.execute("LOAD 'h3-duckdb/build/release/h3.duckdb_extension';")
+
+    # Validate the extension was loaded
     df = con.execute("SELECT h3_cell_to_parent(cast(586265647244115967 as ubigint), 1);").df()
     print(df)
     return df
-
-
-# @aql.transform(conn_id=DUCKDB_CONN_ID)
-# def validate_h3_extension():
-#     return """SELECT h3_cell_to_parent(cast(586265647244115967 as ubigint), 1);
-#     """
 
 
 @aql.run_raw_sql(conn_id=DUCKDB_CONN_ID)
@@ -66,11 +62,31 @@ def filter_data():
     return """SELECT * FROM movement LIMIT 10"""
 
 
+@aql.transform(conn_id=DUCKDB_CONN_ID)
+def failed_task_validate_custom_extension():
+    """ This task fails. 
+    Note: Needs `allow_unsigned_extensions` to be set to true before the DuckDB connection is created.
+    """
+    return """
+    LOAD 'h3-duckdb/build/release/h3.duckdb_extension';
+    SELECT h3_cell_to_parent(cast(586265647244115967 as ubigint), 1);
+    """
+
+
 @aql.dataframe()
-def transform_data(df: pd.DataFrame):
+def failed_task_transform_data(df: pd.DataFrame):
+    """ This task fails. 
+    Note: The DuckDB connection for the input (which has an empty config) has precedence, so the `allow_unsigned_extensions`
+    config doesn't set and the custom library doesn't load.
+    """ 
     # Faux transformation
-    print(df)
-    return df
+    con = duckdb.connect(database="/tmp/db.duckdb", config={"allow_unsigned_extensions": "true"}, read_only=False)
+    con.execute("LOAD 'h3-duckdb/build/release/h3.duckdb_extension';")
+
+    # Validate the extension was loaded
+    df_2 = con.execute("SELECT h3_cell_to_parent(cast(586265647244115967 as ubigint), 1);").df()
+    print(df_2)
+    return df_2
 
 
 @dag(
@@ -78,25 +94,25 @@ def transform_data(df: pd.DataFrame):
     schedule_interval=None,
     catchup=False,
 )
-def movement():
+def custom_extension_etl():
 
-    load_h3 = load_h3_extension()
+    load_custom_extension = load_custom_extension_funct()
 
-    # validate_h3 = validate_h3_extension()
+    validate_custom = failed_task_validate_custom_extension()
 
     load_dataframe = load_data()
 
     filter_dataframe = filter_data()
 
-    aggregate_dataframe = transform_data(
+    transform_dataframe = failed_task_transform_data(
         filter_dataframe,
         output_table=Table(conn_id=DUCKDB_CONN_ID),
     )
 
-    load_h3 >>  load_dataframe >> filter_dataframe
+    load_custom_extension >>  load_dataframe >> filter_dataframe >> transform_dataframe >> validate_custom
 
 
     aql.cleanup() # delete created temporary tables
 
 
-dag = movement()
+dag = custom_extension_etl()

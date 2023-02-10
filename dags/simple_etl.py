@@ -31,7 +31,7 @@ def transform_data(df: pd.DataFrame):
     schedule_interval=None,
     catchup=False,
 )
-def sample_duckdb_etl():
+def simple_etl():
     veraset_data = aql.load_file(
         input_file=File("s3://movement-sample/movement_dataset_metadata.csv", conn_id=AWS_CONN_ID),
         task_id="veraset_data",
@@ -60,4 +60,4 @@ def sample_duckdb_etl():
     aql.cleanup() # delete created temporary tables
 
 
-dag = sample_duckdb_etl()
+dag = simple_etl()
